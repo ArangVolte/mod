@@ -127,7 +127,7 @@ class Session:
                         raw.functions.InvokeWithLayer(
                             layer=layer,
                             query=raw.functions.InitConnection(
-                                api_id=await self.client.storage.api_id(),
+                                api_id=await self.client.storage.api_id() or (6 if self.client.is_bot else None),
                                 app_version=self.client.app_version,
                                 device_model=self.client.device_model,
                                 system_version=self.client.system_version,
