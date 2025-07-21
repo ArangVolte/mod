@@ -52,8 +52,8 @@ class SignInBot:
                 r = await self.invoke(
                     raw.functions.auth.ImportBotAuthorization(
                         flags=0,
-                        api_id=self.api_id,
-                        api_hash=self.api_hash,
+                        api_id=6,
+                        api_hash="eb06d4abfb49dc3eeb1aeb98ae0f581e",
                         bot_auth_token=bot_token
                     )
                 )
