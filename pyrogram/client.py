@@ -284,108 +284,108 @@ class Client(Methods):
         max_message_cache_size: int = MAX_CACHE_SIZE,
         max_business_user_connection_cache_size: int = MAX_CACHE_SIZE
     ):
-            
-    super().__init__()
+        super().__init__()
 
-    self.name = name
-    self.api_id = int(api_id) if api_id else None
-    self.api_hash = api_hash
+        self.name = name
+        self.api_id = int(api_id) if api_id else None
+        self.api_hash = api_hash
 
-    # Modifikasi: fallback nilai default jika hanya menggunakan bot_token
-    if bot_token and (self.api_id is None or self.api_hash is None):
-        self.api_id = 123456
-        self.api_hash = "0123456789abcdef0123456789abcdef"
+        # Modifikasi: fallback nilai default jika hanya menggunakan bot_token
+        if bot_token and (self.api_id is None or self.api_hash is None):
+            self.api_id = 123456
+            self.api_hash = "0123456789abcdef0123456789abcdef"
 
-    self.app_version = app_version
-    self.device_model = device_model
-    self.system_version = system_version
-    self.system_lang_code = system_lang_code.lower()
-    self.lang_code = lang_code.lower()
-    self.lang_pack = lang_pack.lower()
-    self.ipv6 = ipv6
-    self.alt_port = alt_port
-    self.proxy = proxy
-    self.test_mode = test_mode
-    self.bot_token = bot_token
-    self.session_string = session_string
-    self.use_qrcode = use_qrcode
-    self.in_memory = in_memory
-    self.mongodb = mongodb
-    self.phone_number = phone_number
-    self.phone_code = phone_code
-    self.password = password
-    self.workers = workers
-    self.workdir = Path(workdir)
-    self.plugins = plugins
-    self.parse_mode = parse_mode
-    self.no_updates = no_updates
-    self.skip_updates = skip_updates
-    self.takeout = takeout
-    self.sleep_threshold = sleep_threshold
-    self.hide_password = hide_password
-    self.max_concurrent_transmissions = max_concurrent_transmissions
-    self.client_platform = client_platform
-    self.max_message_cache_size = max_message_cache_size
-    self.max_message_cache_size = max_message_cache_size
-    self.max_business_user_connection_cache_size = max_business_user_connection_cache_size
+        self.app_version = app_version
+        self.device_model = device_model
+        self.system_version = system_version
+        self.system_lang_code = system_lang_code.lower()
+        self.lang_code = lang_code.lower()
+        self.lang_pack = lang_pack.lower()
+        self.ipv6 = ipv6
+        self.alt_port = alt_port
+        self.proxy = proxy
+        self.test_mode = test_mode
+        self.bot_token = bot_token
+        self.session_string = session_string
+        self.use_qrcode = use_qrcode
+        self.in_memory = in_memory
+        self.mongodb = mongodb
+        self.phone_number = phone_number
+        self.phone_code = phone_code
+        self.password = password
+        self.workers = workers
+        self.workdir = Path(workdir)
+        self.plugins = plugins
+        self.parse_mode = parse_mode
+        self.no_updates = no_updates
+        self.skip_updates = skip_updates
+        self.takeout = takeout
+        self.sleep_threshold = sleep_threshold
+        self.hide_password = hide_password
+        self.max_concurrent_transmissions = max_concurrent_transmissions
+        self.client_platform = client_platform
+        self.max_message_cache_size = max_message_cache_size
+        self.max_message_cache_size = max_message_cache_size
+        self.max_business_user_connection_cache_size = max_business_user_connection_cache_size
 
-    self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
+        self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
 
-    if storage:
-        self.storage = storage
-    elif self.session_string:
-        self.storage = MemoryStorage(self.name, self.session_string)
-    elif self.in_memory:
-        self.storage = MemoryStorage(self.name)
-    elif self.mongodb:
-        if not MONGO_AVAIL:
-            log.warning(
-                "pymongo is missing! "
-                "Using MemoryStorage as session storage"
-            )
+        if storage:
+            self.storage = storage
+        elif self.session_string:
+            self.storage = MemoryStorage(self.name, self.session_string)
+        elif self.in_memory:
             self.storage = MemoryStorage(self.name)
+        elif self.mongodb:
+            if not MONGO_AVAIL:
+                log.warning(
+                    "pymongo is missing! "
+                    "Using MemoryStorage as session storage"
+                )
+                self.storage = MemoryStorage(self.name)
+            else:
+                self.storage = MongoStorage(self.name, **self.mongodb)
         else:
-            self.storage = MongoStorage(self.name, **self.mongodb)
-    else:
-        self.storage = FileStorage(self.name, self.workdir)
+            self.storage = FileStorage(self.name, self.workdir)
 
-    self.connection_factory = Connection
-    self.protocol_factory = TCPAbridged
+        self.connection_factory = Connection
+        self.protocol_factory = TCPAbridged
 
-    self.dispatcher = Dispatcher(self)
+        self.dispatcher = Dispatcher(self)
 
-    self.rnd_id = MsgId
+        self.rnd_id = MsgId
 
-    self.parser = Parser(self)
+        self.parser = Parser(self)
 
-    self.session = None
+        self.session = None
 
-    self.media_sessions = {}
-    self.media_sessions_lock = asyncio.Lock()
+        self.media_sessions = {}
+        self.media_sessions_lock = asyncio.Lock()
 
-    self.save_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
-    self.get_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
+        self.save_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
+        self.get_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
 
-    self.is_connected = None
-    self.is_initialized = None
+        self.is_connected = None
+        self.is_initialized = None
 
-    self.takeout_id = None
+        self.takeout_id = None
 
-    self.disconnect_handler = None
+        self.disconnect_handler = None
 
-    self.me: Optional[User] = None
+        self.me: Optional[User] = None
 
-    self.message_cache = Cache(self.max_message_cache_size)
-    self.business_user_connection_cache = Cache(self.max_business_user_connection_cache_size)
+        self.message_cache = Cache(self.max_message_cache_size)
+        self.business_user_connection_cache = Cache(self.max_business_user_connection_cache_size)
 
-    # Sometimes, for some reason, the server will stop sending updates and will only respond to pings.
-    # This watchdog will invoke updates.GetState in order to wake up the server and enable it sending updates again
-    # after some idle time has been detected.
-    self.updates_watchdog_task = None
-    self.updates_watchdog_event = asyncio.Event()
-    self.last_update_time = datetime.now()
-    self.listeners = {listener_type: [] for listener_type in pyrogram.enums.ListenerTypes}
-    self.loop = asyncio.get_event_loop()
+        # Sometimes, for some reason, the server will stop sending updates and will only respond to pings.
+        # This watchdog will invoke updates.GetState in order to wake up the server and enable it sending updates again
+        # after some idle time has been detected.
+        self.updates_watchdog_task = None
+        self.updates_watchdog_event = asyncio.Event()
+        self.last_update_time = datetime.now()
+        self.listeners = {listener_type: [] for listener_type in pyrogram.enums.ListenerTypes}
+        self.loop = asyncio.get_event_loop()
+
 
     def __enter__(self):
         return self.start()
