@@ -283,7 +283,8 @@ class Client(Methods):
     client_platform: "enums.ClientPlatform" = enums.ClientPlatform.OTHER,
     max_message_cache_size: int = MAX_CACHE_SIZE,
     max_business_user_connection_cache_size: int = MAX_CACHE_SIZE
-):
+    ):
+        
     super().__init__()
 
     self.name = name
