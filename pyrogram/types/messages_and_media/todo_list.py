@@ -64,20 +64,67 @@ class TodoList(Object):
     def _parse(
         client: "pyrogram.Client",
         todo: "raw.types.TodoList",
-        users: Dict
+        users: Dict = None
     ) -> "TodoList":
-        todo_list = todo.todo
-        completions = todo.completions
-        entities = [types.MessageEntity._parse(client, entity, None) for entity in todo_list.title.entities]
-        entities = types.List(filter(lambda x: x is not None, entities))
-        tasks = [
-            types.TodoTask._parse(client, task, users, completions)
-            for task in todo_list.list
-        ] if todo_list.list else []
+        # ============================================================
+        # FIX #1: Guard users=None
+        # ============================================================
+        if users is None:
+            users = {}
+
+        # ============================================================
+        # FIX #2: Guard todo.todo=None
+        # ============================================================
+        todo_list = getattr(todo, "todo", None)
+        if todo_list is None:
+            return TodoList(
+                title="",
+                entities=types.List([]),
+                tasks=[],
+                can_append=False,
+                can_complete=False
+            )
+
+        completions = getattr(todo, "completions", None) or []
+
+        # ============================================================
+        # FIX #3: Guard title & entities=None
+        # ============================================================
+        title_obj = getattr(todo_list, "title", None)
+        title_text = ""
+        raw_entities = []
+        if title_obj is not None:
+            title_text = getattr(title_obj, "text", "") or ""
+            raw_entities = getattr(title_obj, "entities", None) or []
+
+        title_entities = []
+        for entity in raw_entities:
+            try:
+                parsed = types.MessageEntity._parse(client, entity, users)
+                if parsed is not None:
+                    title_entities.append(parsed)
+            except Exception:
+                continue
+
+        # ============================================================
+        # FIX #4: Guard list tasks=None
+        # ============================================================
+        raw_tasks = getattr(todo_list, "list", None) or []
+        tasks = []
+        for task in raw_tasks:
+            try:
+                parsed_task = types.TodoTask._parse(
+                    client, task, users, completions
+                )
+                if parsed_task is not None:
+                    tasks.append(parsed_task)
+            except Exception:
+                continue
+
         return TodoList(
-            title=todo_list.title.text,
-            entities=entities,
+            title=title_text,
+            entities=types.List(title_entities),
             tasks=tasks,
-            can_append=todo_list.others_can_append,
-            can_complete=todo_list.others_can_complete
+            can_append=getattr(todo_list, "others_can_append", False) or False,
+            can_complete=getattr(todo_list, "others_can_complete", False) or False
         )
