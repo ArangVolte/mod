@@ -87,6 +87,14 @@ class MessageEntity(Object):
         entity: "raw.base.MessageEntity",
         users: Dict[int, "raw.types.User"] = None
     ) -> Optional["MessageEntity"]:
+        # ============================================================
+        # FIX: Guard against users=None
+        # Sebelumnya: users.get(user_id, None) -> crash kalau users None
+        # Sekarang: dipastikan users selalu dict (kosong kalau None)
+        # ============================================================
+        if users is None:
+            users = {}
+
         # Special case for InputMessageEntityMentionName -> MessageEntityType.TEXT_MENTION
         # This happens in case of UpdateShortSentMessage inside send_message() where entities are parsed from the input
         if isinstance(entity, raw.types.InputMessageEntityMentionName):
@@ -96,12 +104,24 @@ class MessageEntity(Object):
             entity_type = enums.MessageEntityType(entity.__class__)
             user_id = getattr(entity, "user_id", None)
 
+        # ============================================================
+        # FIX: Guard user_id None juga, jangan lookup kalau tidak ada
+        # ============================================================
+        user_obj = None
+        if user_id is not None:
+            try:
+                user_obj = types.User._parse(client, users.get(user_id, None))
+            except Exception:
+                # Kalau parsing user gagal (misal user_id valid tapi data user tidak ada),
+                # jangan sampai crash seluruh proses parsing pesan
+                user_obj = None
+
         return MessageEntity(
             type=entity_type,
             offset=entity.offset,
             length=entity.length,
             url=getattr(entity, "url", None),
-            user=types.User._parse(client, users.get(user_id, None)),
+            user=user_obj,
             language=getattr(entity, "language", None),
             custom_emoji_id=getattr(entity, "document_id", None),
             collapsed=getattr(entity, "collapsed", None),
